@@ -5,7 +5,8 @@
 #include "defines.h"
 
 void InitGame();
-void StepGame();
+bool StepGame();
 void StartFireworks();
+void ShowStar();
 void StartLine();
 // vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=cpp

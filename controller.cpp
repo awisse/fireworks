@@ -22,6 +22,7 @@ void Dispatch(Event e) {
       break;
 
     case Short_B:
+      ShowStar();
       break;
 
     case Long_B:

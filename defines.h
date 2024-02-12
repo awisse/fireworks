@@ -15,7 +15,7 @@
 //#define pgm_read_ptr pgm_read_word
 #endif
 
-#define _DEBUG
+/* #define _DEBUG */
 
 // Game Parameters
 #define FRAME_RATE 30
@@ -26,9 +26,9 @@
 #define DISSOLVE_PX 32
 
 // Mathematical constants
-// 1024 * cos(PI/6). For 12 Rays. 
+// 128 * cos(PI/6). For 12 Rays.
 // For a different number of rays, must define more values
-#define COS30 887u
+#define COS30 111u
 
 // Functions
 #define ABSDIFF(x, y) (x < y) ? y - x : x - y

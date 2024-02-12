@@ -13,14 +13,18 @@ public:
   static int16_t Random(int16_t i0, int16_t i1);
   // Drawing
   static void DrawBuffer(); // Do we need this?
-  static void PutPixel(uint8_t x, uint8_t y, uint8_t colour);
+  static void PutPixel(uint8_t x, uint8_t y, uint8_t colour=COLOUR_WHITE);
   static void DrawBitmap(const uint8_t* bitmap, int16_t x, int16_t y,
-                  uint8_t w, uint8_t h, uint8_t colour);
-  static void DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t colour);
+                  uint8_t w, uint8_t h, uint8_t colour=COLOUR_WHITE);
+  static void DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
+      uint8_t colour=COLOUR_WHITE);
   static void DrawRect(int16_t x, int16_t y, uint8_t w, uint8_t h);
-  static void DrawFilledRect(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t colour);
-  static void DrawCircle(int16_t x0, int16_t y0, uint8_t r, uint8_t colour);
-  static void DrawFilledCircle(int16_t x0, int16_t y0, uint8_t r, uint8_t colour);
+  static void DrawFilledRect(int16_t x, int16_t y, uint8_t w, uint8_t h,
+      uint8_t colour=COLOUR_WHITE);
+  static void DrawCircle(int16_t x0, int16_t y0, uint8_t r,
+      uint8_t colour=COLOUR_WHITE);
+  static void DrawFilledCircle(int16_t x0, int16_t y0, uint8_t r,
+      uint8_t colour=COLOUR_WHITE);
   static void FillScreen(uint8_t colour);
   static void Clear();
   // Timer
@@ -42,7 +46,7 @@ public:
   static void DebugPrint(uint16_t value, bool endl=false);
   static void DebugPrint(int16_t value, bool endl=false);
   static void DebugPrint(float value, bool endl=false);
-  static void DebugPrint(const uint8_t* text);
+  static void DebugPrint(const uint8_t* text, bool endl=false);
 #endif
 	
 };

@@ -26,13 +26,13 @@ void DrawLine(int8_t x0, int8_t y0, int8_t x1, int8_t y1) {
 
   int8_t dx = ABSDIFF(x1,x0);
   int8_t sx = SIGNXY(x0,x1);
-  int8_t dy = ABSDIFF(y1,y0); 
+  int8_t dy = ABSDIFF(y1,y0);
   int8_t sy = SIGNXY(y0,y1);
   int8_t err = (dx>dy ? dx : -dy)/2;
   int8_t e2;
 
   for(;;){
-    Platform::PutPixel(x0, y0, COLOUR_WHITE);  
+    Platform::PutPixel(x0, y0, COLOUR_WHITE);
     if (x0==x1 && y0==y1) break;
     e2 = err;
     if (e2 >-dx) { err -= dy; x0 += sx; }
@@ -40,14 +40,13 @@ void DrawLine(int8_t x0, int8_t y0, int8_t x1, int8_t y1) {
   }
 }
 
-bool DrawStar(Ray star[NUM_RAYS]) {
+void DrawStar(Ray star[NUM_RAYS]) {
   // Draw a star with 12 rays simultaneously from one ray
   int8_t i;
 
   for (i=0; i<NUM_RAYS; i++) {
-    DrawLine(star[i].x0, star[i].y0, star[i].x1, star[i].y1);
+    DrawLine(star[i].x, star[i].y, star[i].x1, star[i].y1);
   }
-  return false;
 }
 
 void Dissolve(uint8_t x, uint8_t y, uint8_t r) {

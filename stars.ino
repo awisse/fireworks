@@ -1,6 +1,7 @@
 #include <Arduboy2.h>
 #include "defines.h"
 #include "game.h"
+#include "platform.h"
 
 Arduboy2Base arduboy;
 
@@ -22,8 +23,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   if (arduboy.nextFrame()) {
-    StepGame();
-    arduboy.display();
+    if (StepGame());
+      arduboy.display();
   }
 }
 
@@ -41,6 +42,9 @@ uint8_t Platform::ButtonState() {
 // For Drawing
 void Platform::PutPixel(uint8_t x, uint8_t y, uint8_t colour)
 {
+  if ((x < 0) || (y < 0) || (x >= DISPLAY_WIDTH) || (y >= DISPLAY_HEIGHT)) {
+    return;
+  }
   arduboy.drawPixel(x, y, colour);
 }
 
@@ -57,4 +61,40 @@ void Platform::Clear() {
   arduboy.clear();
 }
 
+unsigned long Platform::Millis() {
+  return millis();
+}
+
+#ifdef _DEBUG
+void Platform::DebugPrint(uint16_t value, bool endl) {
+  Serial.print(value);
+  Serial.print(':');
+  if (endl) {
+    Serial.println();
+  }
+}
+
+void Platform::DebugPrint(int16_t value, bool endl) {
+  Serial.print(value);
+  Serial.print(':');
+  if (endl) {
+    Serial.println();
+  }
+}
+
+void Platform::DebugPrint(float value, bool endl) {
+  Serial.print(value);
+  Serial.print(':');
+  if (endl) {
+    Serial.println();
+  }
+}
+
+void Platform::DebugPrint(const uint8_t* text, bool endl) {
+  Serial.print((char*)text);
+  if (endl) {
+    Serial.println();
+  }
+}
+#endif
 // vim:ts=2:sts=2:sw=2:expandtab

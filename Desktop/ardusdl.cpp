@@ -12,9 +12,9 @@
 
 #define ZOOM_SCALE 4
 
-SDL_Window* AppWindow;
-SDL_Renderer* AppRenderer;
-SDL_Surface* AppSurface;
+SDL_Window* AppWindow = NULL;
+SDL_Renderer* AppRenderer = NULL;
+SDL_Surface* AppSurface = NULL;
 uint8_t sBuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT / 8];
 EEPROM eeprom;
 unsigned long StartTime;
@@ -50,6 +50,9 @@ uint8_t* Platform::GetBuffer() {
 
 void Platform::PutPixel(uint8_t x, uint8_t y, uint8_t colour) {
 
+  if ((x < 0) || (y < 0) || (x >= DISPLAY_WIDTH) || (y >= DISPLAY_HEIGHT)) {
+    return;
+  }
   SetColour(colour);
   SDL_RenderDrawPoint(AppRenderer, x, y);
 }
@@ -244,8 +247,11 @@ void Platform::DebugPrint(float value, bool endl) {
   std::cout.flush();
 }
 
-void Platform::DebugPrint(const uint8_t* text) {
-  std::cout << text << "\n";
+void Platform::DebugPrint(const uint8_t* text, bool endl) {
+  std::cout << text;
+  if (endl) {
+    std::cout << "\n";
+  }
 }
 #endif
 
@@ -299,12 +305,27 @@ int main(int argc, char* argv[])
     }
   }
 
-  SDL_Init(SDL_INIT_VIDEO);
+  if (SDL_Init(SDL_INIT_VIDEO)) {
+    std::cerr << SDL_GetError() << "\n";
+    return -1;
+  }
 
-  SDL_CreateWindowAndRenderer(DISPLAY_WIDTH * zoom_scale, DISPLAY_HEIGHT * zoom_scale,
-      SDL_WINDOW_RESIZABLE, &AppWindow, &AppRenderer);
-  SDL_RenderSetLogicalSize(AppRenderer, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-  AppSurface = SDL_GetWindowSurface(AppWindow);
+  if (SDL_CreateWindowAndRenderer(DISPLAY_WIDTH * zoom_scale,
+        DISPLAY_HEIGHT * zoom_scale, 0, &AppWindow, &AppRenderer)) {
+    std::cerr << SDL_GetError() << "\n";
+    cleanup();
+    return -1;
+  }
+  if (SDL_RenderSetLogicalSize(AppRenderer, DISPLAY_WIDTH, DISPLAY_HEIGHT)) {
+    std::cerr << SDL_GetError() << "\n";
+    cleanup();
+    return -1;
+  }
+  if ((AppSurface=SDL_GetWindowSurface(AppWindow)) == NULL) {
+    std::cerr << SDL_GetError() << "\n";
+    cleanup();
+    return -1;
+  }
 
   Initialize();
 
@@ -385,12 +406,13 @@ int main(int argc, char* argv[])
           break;
         }
       }
-    StepGame();
+    bool modified = StepGame();
     if (!eeprom.isSaved()) {
       eeprom.save();
     }
 
-    SDL_RenderPresent(AppRenderer);
+    if (modified)
+      SDL_RenderPresent(AppRenderer);
 
     // FrameRate
     SDL_Delay(1000 / FRAME_RATE);
@@ -402,8 +424,18 @@ int main(int argc, char* argv[])
 }
 
 void cleanup() {
-  SDL_DestroyRenderer(AppRenderer);
-  SDL_DestroyWindow(AppWindow);
+  if (AppRenderer) {
+    SDL_ClearError();
+    SDL_DestroyRenderer(AppRenderer);
+    std::cerr << SDL_GetError() << "\n";
+  }
+
+  if (AppWindow) {
+    SDL_DestroyWindow(AppWindow);
+    SDL_ClearError();
+    std::cerr << SDL_GetError() << "\n";
+  }
+
   SDL_Quit();
 }
 

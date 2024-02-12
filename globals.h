@@ -22,10 +22,12 @@ enum Direction {
 };
 
 typedef struct {
-  int8_t x0;
-  int8_t y0;
-  int8_t x1;
-  int8_t y1;
+  int8_t x; // Drawing coordinates
+  int8_t y; // Drawing coordinates
+  int8_t x0; // Generic ray endpoint
+  int8_t y0; // Generic ray endpoint
+  int8_t x1; // Translated ray endpoint
+  int8_t y1; // Translated ray endpoint
   int8_t dx;
   int8_t dy;
   int8_t sx;
