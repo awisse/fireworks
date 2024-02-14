@@ -11,6 +11,10 @@ void setup() {
   arduboy.begin();
   arduboy.setFrameRate(FRAME_RATE);
 
+#ifdef _DEBUG
+  Serial.begin(9600);
+#endif
+
   while (!arduboy.pressed(A_BUTTON)) {
     arduboy.idle();
   }
@@ -55,6 +59,11 @@ void Platform::DrawBitmap(const uint8_t* bitmap,  int16_t x, int16_t y, uint8_t 
 
 void Platform::DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t colour) {
   arduboy.drawLine(x0, y0, x1, y1, colour);
+}
+
+void Platform::DrawFilledCircle(int16_t x0, int16_t y0, uint8_t r,
+    uint8_t colour=COLOUR_WHITE) {
+  arduboy.fillCircle(x0, y0, r, colour);
 }
 
 void Platform::Clear() {

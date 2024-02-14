@@ -1,62 +1,66 @@
 #include "defines.h"
-/* #include "globals.h" */
 #include "draw.h"
 #include "platform.h"
-#include "font.h"
+#include "utils.h"
 
-Font font;
 uint16_t displayed_lvl = 1; // Level displayed in upper left corner
 
-uint8_t len(const uint8_t* text) {
-  // Compute length of utf-8 string
-  uint8_t length=0;
+void Dissolve(int8_t x, int8_t y, uint8_t r) {
 
-  while (*text++) {
-    if ((*text & 0xC0) != 0xC0)
-      length++;
-  }
-  return length;
+  Platform::DrawFilledCircle(x, y, r, COLOUR_BLACK);
 }
 
-void Draw() {
+void DrawScatterRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bits, uint8_t colour) {
+  // Draw a rectangle with randomly scattered points
+  // Bits: Right shift of total number of points:
+  //       0: w * h points,
+  //       1: (w * h) >> 1 points (50% of all possible points).
+  //       2: (w * h) >> 2 points (25% of all possible points).
+  //       ...
+  uint16_t i; // Loop variable
+  uint16_t r; // random variable
+  uint16_t dx, dy; // Offset from x0, y0
 
-}
+  for (i=0; i < ((w * h) >> bits); i++) {
+    r = Rand();
 
-void DrawLine(int8_t x0, int8_t y0, int8_t x1, int8_t y1) {
+    dx = ((r >> 8) * w) >> 8;
+    dy = ((r & 0xFF) * h) >> 8;
 
-  int8_t dx = ABSDIFF(x1,x0);
-  int8_t sx = SIGNXY(x0,x1);
-  int8_t dy = ABSDIFF(y1,y0);
-  int8_t sy = SIGNXY(y0,y1);
-  int8_t err = (dx>dy ? dx : -dy)/2;
-  int8_t e2;
-
-  for(;;){
-    Platform::PutPixel(x0, y0, COLOUR_WHITE);
-    if (x0==x1 && y0==y1) break;
-    e2 = err;
-    if (e2 >-dx) { err -= dy; x0 += sx; }
-    if (e2 < dy) { err += dx; y0 += sy; }
+    Platform::PutPixel(x + dx, y + dy, colour);
+    
   }
 }
 
-void DrawStar(Ray star[NUM_RAYS]) {
-  // Draw a star with 12 rays simultaneously from one ray
-  int8_t i;
+void DrawScatterDisk(uint8_t x0, uint8_t y0, uint8_t r, uint8_t bits, uint8_t colour) {
+  uint16_t i; // Loop variable
+  uint16_t rv; // random variable
+  int16_t dx, dy; // Offset from x0, y0
 
-  for (i=0; i<NUM_RAYS; i++) {
-    DrawLine(star[i].x, star[i].y, star[i].x1, star[i].y1);
+  for (i=0; i < ((4 * r * r) >> bits); i++) {
+    rv = Rand();
+
+    dx = (((rv >> 7)  * r) >> 8) - r;
+    dy = (((rv & 0xFF) * 2 * r) >> 8) - r;
+
+    // Pythagoras: Are we inside the circle?
+    uint16_t r2 = r * r; // Must transform to 16 bit value for comparison
+    if (dx * dx + dy * dy > r2) continue;
+#if 0
+    uint16_t d2 = dx * dx + dy * dy;
+    Platform::DebugPrint((uint8_t*)"dx:dy:dx^2+dy^2:r^2:");
+    Platform::DebugPrint(dx);
+    Platform::DebugPrint(dy);
+    Platform::DebugPrint(d2);
+    Platform::DebugPrint(r2, true);
+#endif
+
+    Platform::PutPixel(x0 + dx, y0 + dy, colour);
   }
 }
 
-void Dissolve(uint8_t x, uint8_t y, uint8_t r) {
-  uint16_t ix;
-  uint8_t i;
-
-  for (i=0; i<DISSOLVE_PX; i++) {
-    ix = Platform::Random(0, (x + r) * (y + r) / 8);
-    Platform::PutPixel(ix & 0xFF, ix >> 4, COLOUR_BLACK);
-  }
+void DrawScatterCircle(uint8_t x0, uint8_t y0, uint8_t r, uint8_t pct, uint8_t colour) {
 }
+
 //
 // vim:fdm=syntax

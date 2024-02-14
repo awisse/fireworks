@@ -35,5 +35,13 @@ typedef struct {
   int8_t err;
 } Ray;
 
+typedef struct {
+  Ray rays[NUM_RAYS];
+  int8_t X; // Center coordinates
+  int8_t Y; // Center coordinates
+  int8_t R0;
+  int8_t R;
+} Star;
+
 
 // vim:ft=cpp

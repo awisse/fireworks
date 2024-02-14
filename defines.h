@@ -18,7 +18,7 @@
 /* #define _DEBUG */
 
 // Game Parameters
-#define FRAME_RATE 30
+#define FRAME_RATE 40
 #define MAX_FIREWORKS 6
 #define NUM_RAYS 12
 #define RAY_LENGTH 24

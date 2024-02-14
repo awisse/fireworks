@@ -7,6 +7,7 @@
 void InitGame();
 bool StepGame();
 void StartFireworks();
-void ShowStar();
+void StartScatter();
+void ToggleAnimation();
 void StartLine();
 // vim: tabstop=2:softtabstop=2:shiftwidth=2:expandtab:filetype=cpp

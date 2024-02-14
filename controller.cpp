@@ -22,7 +22,7 @@ void Dispatch(Event e) {
       break;
 
     case Short_B:
-      ShowStar();
+      ToggleAnimation();
       break;
 
     case Long_B:
