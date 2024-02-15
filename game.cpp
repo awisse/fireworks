@@ -12,7 +12,7 @@ Helper functions to unclutter main .ino file
 bool modified; // True if screen needs to be redrawn
 bool animating;
 bool dissolving;
-Star star; // A star from NUM_RAYS rays
+Star star[MAX_FIREWORKS]; // A star[0] from NUM_RAYS rays
 uint8_t erase_radius = 0;
 
 void InitStar();
@@ -69,39 +69,39 @@ void InitStar() {
   uint16_t i;
 
   // Zero out the whole structure
-  for (i = 0; i < (uint16_t)sizeof(star.rays); i++) {
-    *((uint8_t*)star.rays + i) = 0;
+  for (i = 0; i < (uint16_t)sizeof(star[0].rays); i++) {
+    *((uint8_t*)star[0].rays + i) = 0;
   }
 
   // Compute the generic endpoints of NUM_RAYS stars
   for (i = 0; i < NUM_RAYS / 3; i++) { // Four quadrants simultaneously
     // 0, Pi/2, Pi, 3*Pi/2
-    star.rays[i * 3].x0 = ((i & 1) - (i & 2)) * (i & 1) * RAY_LENGTH;
-    star.rays[i * 3].y0 = ((~i) & 1) * ((i & 2) - 1) * RAY_LENGTH;
-    InitRay(&star.rays[i * 3]);
+    star[0].rays[i * 3].x0 = ((i & 1) - (i & 2)) * (i & 1) * RAY_LENGTH;
+    star[0].rays[i * 3].y0 = ((~i) & 1) * ((i & 2) - 1) * RAY_LENGTH;
+    InitRay(&star[0].rays[i * 3]);
     // Pi/6, 2*Pi/3, 7*Pi/6, 5*Pi/3
-    rotate(&star.rays[i * 3 + 1], &star.rays[i * 3]);
-    InitRay(&star.rays[i * 3 + 1]);
+    rotate(&star[0].rays[i * 3 + 1], &star[0].rays[i * 3]);
+    InitRay(&star[0].rays[i * 3 + 1]);
     // Pi/3, 5*Pi/6, 4*Pi/3, 11*Pi/6
-    rotate(&star.rays[i * 3 + 2], &star.rays[i * 3 + 1]);
-    InitRay(&star.rays[i * 3 + 2]);
+    rotate(&star[0].rays[i * 3 + 2], &star[0].rays[i * 3 + 1]);
+    InitRay(&star[0].rays[i * 3 + 2]);
   }
-  star.R0 = -star.rays[0].y0;
+  star[0].R0 = -star[0].rays[0].y0;
 }
 
 void StartFireworks() {
   uint8_t i;
-  int8_t x0 = 64;
-  int8_t y0 = 32;
+  int8_t x0 = Platform::Random(32, 96);
+  int8_t y0 = Platform::Random(16, 48);
   // Translate the ray endpoints
-  star.X = x0;
-  star.Y = y0;
-  star.R = 0;
+  star[0].X = x0;
+  star[0].Y = y0;
+  star[0].R = 0;
   for (i = 0; i < NUM_RAYS; i++) {
-    star.rays[i].x = x0;
-    star.rays[i].y = y0;
-    star.rays[i].x1 = x0 + star.rays[i].x0;
-    star.rays[i].y1 = y0 + star.rays[i].y0;
+    star[0].rays[i].x = x0;
+    star[0].rays[i].y = y0;
+    star[0].rays[i].x1 = x0 + star[0].rays[i].x0;
+    star[0].rays[i].y1 = y0 + star[0].rays[i].y0;
   }
   Platform::Clear();
   animating = true;
@@ -120,49 +120,49 @@ void StepFireworks() {
 
   for (i=0; i<NUM_RAYS; i++) {
 
-    Platform::PutPixel(star.rays[i].x, star.rays[i].y);
+    Platform::PutPixel(star[0].rays[i].x, star[0].rays[i].y);
 
-    if (star.rays[i].x==star.rays[i].x1 && star.rays[i].y==star.rays[i].y1) {
+    if (star[0].rays[i].x==star[0].rays[i].x1 && star[0].rays[i].y==star[0].rays[i].y1) {
       finished++;
       continue;
     }
 
-    e2 = star.rays[i].err;
-    if (e2 >-star.rays[i].dx) {
-      star.rays[i].err -= star.rays[i].dy;
-      star.rays[i].x += star.rays[i].sx;
+    e2 = star[0].rays[i].err;
+    if (e2 >-star[0].rays[i].dx) {
+      star[0].rays[i].err -= star[0].rays[i].dy;
+      star[0].rays[i].x += star[0].rays[i].sx;
     }
-    if (e2 < star.rays[i].dy) {
-      star.rays[i].err += star.rays[i].dx;
-      star.rays[i].y += star.rays[i].sy;
+    if (e2 < star[0].rays[i].dy) {
+      star[0].rays[i].err += star[0].rays[i].dx;
+      star[0].rays[i].y += star[0].rays[i].sy;
     }
   }
-  star.R = star.Y - star.rays[0].y;
-  if ((star.R > star.R0 / 2) && !dissolving) {
+  star[0].R = star[0].Y - star[0].rays[0].y;
+  if ((star[0].R > star[0].R0 / 2) && !dissolving) {
     dissolving = true;
-    erase_radius = star.R0 >> 2;
+    erase_radius = star[0].R0 / 3;
   }
   animating = finished < NUM_RAYS;
   modified = true;
 }
 
 void StepDissolve() {
-  // One step of dissolving the star
-  // Start dissolving when star is half done
+  // One step of dissolving the star[0]
+  // Start dissolving when star[0] is half done
 
 #ifdef _DEBUG
   Platform::DebugPrint((uint8_t*)"erase_radius=");
   Platform::DebugPrint((uint16_t)erase_radius);
-  Platform::DebugPrint((uint8_t*)"star.R=");
-  Platform::DebugPrint((uint16_t)star.R, true);
+  Platform::DebugPrint((uint8_t*)"star[0].R=");
+  Platform::DebugPrint((uint16_t)star[0].R, true);
 #endif
   if (animating) {
-    DrawScatterDisk(star.X, star.Y, star.R, 2, COLOUR_BLACK);
+    DrawScatterDisk(star[0].X, star[0].Y, star[0].R, 2, COLOUR_BLACK);
   } else {
-    Platform::DrawFilledCircle(star.X, star.Y, erase_radius, 
+    Platform::DrawFilledCircle(star[0].X, star[0].Y, erase_radius, 
         COLOUR_BLACK);
-    erase_radius += 3;
-    if (erase_radius > star.R0) dissolving = false;
+    erase_radius += 4;
+    if (erase_radius > star[0].R0) dissolving = false;
   }
   modified = true;
 }

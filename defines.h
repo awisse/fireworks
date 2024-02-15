@@ -15,11 +15,11 @@
 //#define pgm_read_ptr pgm_read_word
 #endif
 
-/* #define _DEBUG */
+//#define _DEBUG
 
 // Game Parameters
-#define FRAME_RATE 40
-#define MAX_FIREWORKS 6
+#define FRAME_RATE 30
+#define MAX_FIREWORKS 3
 #define NUM_RAYS 12
 #define RAY_LENGTH 24
 #define PLACES MAX_FIREWORKS * NUM_STARS

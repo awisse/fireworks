@@ -59,8 +59,5 @@ void DrawScatterDisk(uint8_t x0, uint8_t y0, uint8_t r, uint8_t bits, uint8_t co
   }
 }
 
-void DrawScatterCircle(uint8_t x0, uint8_t y0, uint8_t r, uint8_t pct, uint8_t colour) {
-}
-
 //
 // vim:fdm=syntax
