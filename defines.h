@@ -15,15 +15,16 @@
 //#define pgm_read_ptr pgm_read_word
 #endif
 
-//#define _DEBUG
+//#define DEV_DEB
 
 // Game Parameters
 #define FRAME_RATE 30
-#define MAX_FIREWORKS 3
+#define MAX_FIREWORKS 8
 #define NUM_RAYS 12
 #define RAY_LENGTH 24
 #define PLACES MAX_FIREWORKS * NUM_STARS
 #define DISSOLVE_PX 32
+#define FW_DELAY 500
 
 // Mathematical constants
 // 128 * cos(PI/6). For 12 Rays.
@@ -57,3 +58,4 @@
 
 // Time
 #define LONG_PRESS 2000
+// vim:ft=cpp

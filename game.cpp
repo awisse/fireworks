@@ -11,21 +11,27 @@ Helper functions to unclutter main .ino file
 // Global variables
 bool modified; // True if screen needs to be redrawn
 bool animating;
-bool dissolving;
-Star star[MAX_FIREWORKS]; // A star[0] from NUM_RAYS rays
-uint8_t erase_radius = 0;
+bool running; // Run continuous fireworks
+Firework fireworks[MAX_FIREWORKS];
+uint8_t erase_radius;
+uint8_t oldest_fw;
 
-void InitStar();
+void InitFireworks();
+void Init1Firework(Firework* firework);
+void EraseFirework(Firework* firework);
+void StartFirework();
+void Start1Firework();
 void StepFireworks();
-void StepDissolve();
+void Step1Firework(Firework* firework);
+void StepDissolve(Firework* firework);
 
 // Functions
 void InitGame() {
 
   animating = false;
-  dissolving = false;
   modified = true;
-  InitStar();
+  running = false;
+  InitFireworks();
   Platform::Clear();
 }
 
@@ -37,8 +43,8 @@ bool StepGame() {
     StepFireworks();
   }
 
-  if (dissolving) {
-    StepDissolve();
+  if (running) {
+    StartFirework();
   }
 
   if (modified) {
@@ -46,6 +52,25 @@ bool StepGame() {
     return true;
   }
   return false;
+}
+
+void InitFireworks() {
+  uint8_t i;
+
+  for (i=0; i<MAX_FIREWORKS; i++) {
+    Init1Firework(&fireworks[i]);
+  }
+  oldest_fw = 0;
+}
+
+void EraseFirework(Firework* firework) {
+
+  uint16_t i;
+
+  // Zero out the whole structure
+  for (i = 0; i < (uint16_t)sizeof(*firework); i++) {
+    *((uint8_t*)firework + i) = 0;
+  }
 }
 
 void InitRay(Ray* ray) {
@@ -64,105 +89,162 @@ void rotate(Ray* tgt, const Ray* src) {
   tgt->y0 = ((src->x0 << 6) + src->y0 * COS30) >> 7;
 }
 
-void InitStar() {
-  // Prepare the Star structure to be reused for each explosion
-  uint16_t i;
+void Init1Firework(Firework* fw) {
+  // Prepare the Firework structure to be reused for each explosion
+  uint16_t i; // Must be a 16 bit variable
 
-  // Zero out the whole structure
-  for (i = 0; i < (uint16_t)sizeof(star[0].rays); i++) {
-    *((uint8_t*)star[0].rays + i) = 0;
-  }
+  EraseFirework(fw);
 
   // Compute the generic endpoints of NUM_RAYS stars
   for (i = 0; i < NUM_RAYS / 3; i++) { // Four quadrants simultaneously
+
     // 0, Pi/2, Pi, 3*Pi/2
-    star[0].rays[i * 3].x0 = ((i & 1) - (i & 2)) * (i & 1) * RAY_LENGTH;
-    star[0].rays[i * 3].y0 = ((~i) & 1) * ((i & 2) - 1) * RAY_LENGTH;
-    InitRay(&star[0].rays[i * 3]);
+    fw->rays[i * 3].x0 = ((i & 1) - (i & 2)) * (i & 1) * RAY_LENGTH;
+    fw->rays[i * 3].y0 = ((~i) & 1) * ((i & 2) - 1) * RAY_LENGTH;
+    InitRay(&fw->rays[i * 3]);
+
     // Pi/6, 2*Pi/3, 7*Pi/6, 5*Pi/3
-    rotate(&star[0].rays[i * 3 + 1], &star[0].rays[i * 3]);
-    InitRay(&star[0].rays[i * 3 + 1]);
+    rotate(&fw->rays[i * 3 + 1], &fw->rays[i * 3]);
+    InitRay(&fw->rays[i * 3 + 1]);
+
     // Pi/3, 5*Pi/6, 4*Pi/3, 11*Pi/6
-    rotate(&star[0].rays[i * 3 + 2], &star[0].rays[i * 3 + 1]);
-    InitRay(&star[0].rays[i * 3 + 2]);
+    rotate(&fw->rays[i * 3 + 2], &fw->rays[i * 3 + 1]);
+    InitRay(&fw->rays[i * 3 + 2]);
   }
-  star[0].R0 = -star[0].rays[0].y0;
 }
 
-void StartFireworks() {
-  uint8_t i;
-  int8_t x0 = Platform::Random(32, 96);
-  int8_t y0 = Platform::Random(16, 48);
-  // Translate the ray endpoints
-  star[0].X = x0;
-  star[0].Y = y0;
-  star[0].R = 0;
-  for (i = 0; i < NUM_RAYS; i++) {
-    star[0].rays[i].x = x0;
-    star[0].rays[i].y = y0;
-    star[0].rays[i].x1 = x0 + star[0].rays[i].x0;
-    star[0].rays[i].y1 = y0 + star[0].rays[i].y0;
+void ToggleFireworks() {
+  running = !running;
+}
+
+void StartFirework() {
+  static uint32_t last_time = 0;
+  uint32_t current_time = Platform::Millis();
+
+  if ((current_time > last_time + FW_DELAY) && running) {
+    last_time = current_time;
+    Start1Firework();
   }
-  Platform::Clear();
+}
+
+void Start1Firework() {
+  uint8_t fwnum, i;
+  int8_t x0;
+  int8_t y0;
+  Firework* fw;
+
+  // Find empty spot in fireworks array
+  for (fwnum=0; fwnum<MAX_FIREWORKS; fwnum++) {
+    fw = &fireworks[(oldest_fw + fwnum) % MAX_FIREWORKS];
+    if (!(fw->growing || fw->dissolving)) break;
+  }
+  if (fwnum == MAX_FIREWORKS) { // No room for another one
+    return;
+  }
+
+  fw = fireworks + fwnum;
+
+  x0 = Platform::Random(32, 96);
+  y0 = Platform::Random(16, 48);
+
+  // Translate the ray endpoints
+  for (i = 0; i < NUM_RAYS; i++) {
+    fw->rays[i].x = x0;
+    fw->rays[i].y = y0;
+    fw->rays[i].x1 = x0 + fw->rays[i].x0;
+    fw->rays[i].y1 = y0 + fw->rays[i].y0;
+  }
+  fw->X = x0;
+  fw->Y = y0;
+  fw->R = 0;
+  fw->growing = true;
+  fw->dissolving = false;
+
   animating = true;
-  dissolving = false;
 }
 
 void ToggleAnimation() {
   animating = !animating;
+  running = !running || animating;
 }
 
 void StepFireworks() {
   // Move the fireworks one step further
   // Not used for now.
+  uint8_t i;
+  bool alive = false;
+  Firework* fw;
+
+  // IDEA: Draw fireworks in order, such that dissolving fireworks are
+  // overwritten by drawing fireworks.
+
+  for (i=0; i<MAX_FIREWORKS; i++) {
+    fw = &fireworks[(oldest_fw + i) % MAX_FIREWORKS];
+    if (fw->growing) {
+      alive = true;
+      Step1Firework(fw);
+    }
+    if (fw->dissolving) {
+      alive = true;
+      StepDissolve(fw);
+    }
+  }
+  // Stop drawing updates if no firework alive anymore
+  modified = animating = alive;
+}
+
+void Step1Firework(Firework* fw) {
+
   int8_t e2;
   uint8_t i, finished = 0;
 
   for (i=0; i<NUM_RAYS; i++) {
 
-    Platform::PutPixel(star[0].rays[i].x, star[0].rays[i].y);
+    Platform::PutPixel(fw->rays[i].x, fw->rays[i].y);
 
-    if (star[0].rays[i].x==star[0].rays[i].x1 && star[0].rays[i].y==star[0].rays[i].y1) {
+    if (fw->rays[i].x==fw->rays[i].x1 &&
+        fw->rays[i].y==fw->rays[i].y1) {
       finished++;
       continue;
     }
 
-    e2 = star[0].rays[i].err;
-    if (e2 >-star[0].rays[i].dx) {
-      star[0].rays[i].err -= star[0].rays[i].dy;
-      star[0].rays[i].x += star[0].rays[i].sx;
+    e2 = fw->rays[i].err;
+    if (e2 >-fw->rays[i].dx) {
+      fw->rays[i].err -= fw->rays[i].dy;
+      fw->rays[i].x += fw->rays[i].sx;
     }
-    if (e2 < star[0].rays[i].dy) {
-      star[0].rays[i].err += star[0].rays[i].dx;
-      star[0].rays[i].y += star[0].rays[i].sy;
+    if (e2 < fw->rays[i].dy) {
+      fw->rays[i].err += fw->rays[i].dx;
+      fw->rays[i].y += fw->rays[i].sy;
     }
   }
-  star[0].R = star[0].Y - star[0].rays[0].y;
-  if ((star[0].R > star[0].R0 / 2) && !dissolving) {
-    dissolving = true;
-    erase_radius = star[0].R0 / 3;
+  fw->R = fw->Y - fw->rays[0].y;
+  if ((fw->R > R0 / 2) && !fw->dissolving) {
+    fw->dissolving = true;
+    erase_radius = R0 / 3;
   }
-  animating = finished < NUM_RAYS;
-  modified = true;
+  fw->growing = finished < NUM_RAYS; // All rays finished?
 }
 
-void StepDissolve() {
-  // One step of dissolving the star[0]
-  // Start dissolving when star[0] is half done
+void StepDissolve(Firework* fw) {
+  // One step of dissolving the fireworks[0]
+  // Start dissolving when fireworks[0] is half done
 
-#ifdef _DEBUG
+#ifdef DEV_DEB
   Platform::DebugPrint((uint8_t*)"erase_radius=");
   Platform::DebugPrint((uint16_t)erase_radius);
-  Platform::DebugPrint((uint8_t*)"star[0].R=");
-  Platform::DebugPrint((uint16_t)star[0].R, true);
+  Platform::DebugPrint((uint8_t*)"fw->R=");
+  Platform::DebugPrint((uint16_t)fw->R, true);
 #endif
-  if (animating) {
-    DrawScatterDisk(star[0].X, star[0].Y, star[0].R, 2, COLOUR_BLACK);
+  if (fw->growing) {
+    DrawScatterDisk(fw->X, fw->Y, fw->R, 2, COLOUR_BLACK);
   } else {
-    Platform::DrawFilledCircle(star[0].X, star[0].Y, erase_radius, 
-        COLOUR_BLACK);
+    Platform::DrawFilledCircle(fw->X, fw->Y, erase_radius, COLOUR_BLACK);
     erase_radius += 4;
-    if (erase_radius > star[0].R0) dissolving = false;
+    if (erase_radius > R0) {
+      fw->dissolving = false;
+      fw->R = 0; // Reset for reuse
+    }
   }
   modified = true;
 }

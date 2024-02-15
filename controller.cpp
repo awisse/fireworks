@@ -15,7 +15,7 @@ void Dispatch(Event e) {
  * The listeners decide whether to act on the event. */
   switch (e) {
     case Short_A:
-      StartFireworks();
+      ToggleFireworks();
       break;
 
     case Long_A:

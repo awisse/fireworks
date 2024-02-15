@@ -39,9 +39,10 @@ typedef struct {
   Ray rays[NUM_RAYS];
   int8_t X; // Center coordinates
   int8_t Y; // Center coordinates
-  int8_t R0;
   int8_t R;
-} Star;
+  bool growing;
+  bool dissolving;
+} Firework;
 
-
+constexpr int8_t R0 = RAY_LENGTH;
 // vim:ft=cpp

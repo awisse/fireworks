@@ -6,7 +6,7 @@
 
 void InitGame();
 bool StepGame();
-void StartFireworks();
+void ToggleFireworks();
 void StartScatter();
 void ToggleAnimation();
 void StartLine();

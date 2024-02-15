@@ -19,9 +19,6 @@ uint8_t sBuffer[DISPLAY_WIDTH * DISPLAY_HEIGHT / 8];
 EEPROM eeprom;
 unsigned long StartTime;
 int zoom_scale;
-#ifdef _DEBUG
-int counter;
-#endif
 
 // Replicate the Arduboy screen buffer here:
 uint8_t InputMask = 0;
@@ -222,7 +219,7 @@ void Platform::Clear() {
   FillScreen(COLOUR_BLACK);
 }
 
-#ifdef _DEBUG
+#ifdef DEV_DEB
 void Platform::DebugPrint(uint16_t value, bool endl) {
   std::cout << value << ":";
   if (endl) {

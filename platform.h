@@ -42,7 +42,7 @@ public:
 	/* static void ExpectLoadDelay(); */
 
   // Debug
-#ifdef _DEBUG
+#ifdef DEV_DEB
   static void DebugPrint(uint16_t value, bool endl=false);
   static void DebugPrint(int16_t value, bool endl=false);
   static void DebugPrint(float value, bool endl=false);

@@ -28,7 +28,7 @@ void DrawScatterRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t bits, u
     dy = ((r & 0xFF) * h) >> 8;
 
     Platform::PutPixel(x + dx, y + dy, colour);
-    
+
   }
 }
 
