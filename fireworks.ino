@@ -11,7 +11,7 @@ void setup() {
   arduboy.begin();
   arduboy.setFrameRate(FRAME_RATE);
 
-#ifdef _DEBUG
+#ifdef DEV_DEB
   Serial.begin(9600);
 #endif
 
@@ -74,7 +74,7 @@ unsigned long Platform::Millis() {
   return millis();
 }
 
-#ifdef _DEBUG
+#ifdef DEV_DEB
 void Platform::DebugPrint(uint16_t value, bool endl) {
   Serial.print(value);
   Serial.print(':');
